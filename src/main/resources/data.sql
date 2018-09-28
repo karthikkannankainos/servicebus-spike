@@ -1,0 +1,1 @@
+insert into claim(id, claim) values (10001, 'XXXXX')
