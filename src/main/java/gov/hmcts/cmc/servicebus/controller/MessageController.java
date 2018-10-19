@@ -19,7 +19,7 @@ public class MessageController {
     @Autowired
     IClaimService claimService;
 
-    @PostMapping("/save")
+    @PostMapping("/queue")
     public ResponseEntity<Void> postMessageJoiningTransactionWithDB(@RequestBody Claim claim, @RequestParam("failure") boolean failure){
 
         logger.debug(String.format("Recieved the request to save claim with body %s ",claim.getClaim()));
@@ -30,5 +30,15 @@ public class MessageController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/topic")
+    public ResponseEntity<Void> postMessageForTopic(@RequestBody Claim claim, @RequestParam("failure") boolean failure){
+
+        logger.debug(String.format("Recieved the request to Send TOpic Message with body %s ",claim.getClaim()));
+
+        claimService.postTopicMessage(claim);
+
+        logger.debug(String.format("Completed the send Topic Message operation for Claim with Id %d ",claim.getId()));
+        return ResponseEntity.ok().build();
+    }
 
 }

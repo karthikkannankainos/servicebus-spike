@@ -43,4 +43,17 @@ public class ClaimService implements IClaimService{
         }
         return 1;
     }
+
+    @Override
+    public void postTopicMessage(Claim claim) {
+        try {
+            logger.debug("Before sending the Topic message");
+            messageSender.sendTopicMessage(claim);
+            logger.debug("After successfully sending Tppic message to the topic.");
+        }catch (Exception gene){
+            gene.printStackTrace();
+            logger.error("Error while saveClaim ", gene.getCause());
+            throw new RuntimeException(gene.getCause());
+        }
+    }
 }

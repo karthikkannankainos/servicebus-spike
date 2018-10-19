@@ -8,6 +8,7 @@ import gov.hmcts.cmc.servicebus.dto.Claim;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessagePostProcessor;
@@ -40,6 +41,10 @@ public class QueueMessageSender implements IQueueMessageSender{
     @Autowired
     private JmsTemplate jmsTemplate;
 
+    @Qualifier(value="jmsTopicTemplate")
+    @Autowired
+    private JmsTemplate jmsTopicTemplate;
+
     private static Logger logger = LoggerFactory.getLogger(QueueMessageSender.class);
 
 
@@ -60,11 +65,11 @@ public class QueueMessageSender implements IQueueMessageSender{
 
         //jmsTemplate.send(queueName,  (Session session) ->  session.createTextMessage(claim.getClaim()));
 
-        jmsTemplate.convertAndSend(queueName, claim.getClaim(), new MessagePostProcessor() {
+        jmsTemplate.convertAndSend(queueName, claim, new MessagePostProcessor() {
             @Override
             public javax.jms.Message postProcessMessage(javax.jms.Message message) throws JMSException {
-                message.setJMSCorrelationID("COREE");
-                message.setJMSMessageID("Message");
+                message.setJMSCorrelationID("COR-ID-" + UUID.randomUUID());
+                message.setJMSMessageID("Message" + UUID.randomUUID());
                 message.setStringProperty("JMSXGroupID", appName);
                 return message;
             }
@@ -73,7 +78,28 @@ public class QueueMessageSender implements IQueueMessageSender{
         return (long) claim.getId();
     }
 
-    public Long sendMessageXXXX(Claim claim) throws ServiceBusException, InterruptedException {
+    public Long sendTopicMessage(Claim claim) throws JMSException {
+        logger.debug("The connection string that we received is " + queueConnectionString);
+
+        //jmsTemplate.send(queueName,  (Session session) ->  session.createTextMessage(claim.getClaim()));
+
+        jmsTopicTemplate.convertAndSend("roc-4510", claim, new MessagePostProcessor() {
+            @Override
+            public javax.jms.Message postProcessMessage(javax.jms.Message message) throws JMSException {
+                message.setJMSCorrelationID("COR-ID-" + UUID.randomUUID());
+                message.setJMSMessageID(Integer.toString(claim.getId()));
+                message.setStringProperty("id", Integer.toString(claim.getId()));
+                message.setStringProperty("JMSXGroupID", appName);
+                message.setStringProperty("jms_messageId", Integer.toString(claim.getId()));
+                System.out.println("Id set is " + claim.getId());
+                return message;
+            }
+        });
+        //sendClient.close();
+        return (long) claim.getId();
+    }
+
+    public Long sendMessageMicrosoftAzureSDKWay(Claim claim) throws ServiceBusException, InterruptedException {
         logger.debug("The connection string that we received is " + queueConnectionString);
         QueueClient sendClient = new QueueClient(new ConnectionStringBuilder(queueConnectionString, queueName),
                 ReceiveMode.PEEKLOCK);

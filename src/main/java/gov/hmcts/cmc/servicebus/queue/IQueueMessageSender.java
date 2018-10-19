@@ -8,4 +8,6 @@ import javax.jms.JMSException;
 public interface IQueueMessageSender {
 
     Long sendMessage(Claim type) throws  JMSException;
+
+    Long sendTopicMessage(Claim claim) throws JMSException;
 }
